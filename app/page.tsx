@@ -1,101 +1,261 @@
-import Image from "next/image";
+'use client';
+
+import { Play, Archive, ListTodo, Trash2, List, Plus, Download, Upload } from 'lucide-react';
+import { useTaskStore } from '@/store/useTaskStore';
+import { useShallow } from 'zustand/react/shallow';
+import FocusView from '@/components/FocusView';
+import HistoryView from '@/components/HistoryView';
+import RoadmapEditor from '@/components/RoadmapEditor';
+import ConfirmModal from '@/components/ConfirmModal';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [view, setView] = useState<'dashboard' | 'history'>('dashboard');
+  const [editingRoadmapId, setEditingRoadmapId] = useState<string | null>(null);
+  const [roadmapToDelete, setRoadmapToDelete] = useState<string | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [newRoadmapTitle, setNewRoadmapTitle] = useState('');
+  
+  const roadmaps = useTaskStore((state) => state.roadmaps);
+  const activeSteps = useTaskStore(useShallow((state) => state.getActiveStepPerRoadmap()));
+  const focusedTaskId = useTaskStore((state) => state.focusedTaskId);
+  const setFocus = useTaskStore((state) => state.setFocus);
+  const getRoadmapProgress = useTaskStore((state) => state.getRoadmapProgress);
+  const addRoadmap = useTaskStore((state) => state.addRoadmap);
+  const deleteRoadmap = useTaskStore((state) => state.deleteRoadmap);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  if (editingRoadmapId) {
+    return <RoadmapEditor roadmapId={editingRoadmapId} onClose={() => setEditingRoadmapId(null)} />;
+  }
+
+  if (focusedTaskId) {
+    return <FocusView taskId={focusedTaskId} />;
+  }
+
+  if (view === 'history') {
+    return <HistoryView onBack={() => setView('dashboard')} />;
+  }
+
+  const handleAddRoadmap = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoadmapTitle.trim()) return;
+    addRoadmap(newRoadmapTitle.trim());
+    setNewRoadmapTitle('');
+  };
+
+  const handleExport = () => {
+    const data = localStorage.getItem('adhd-task-storage');
+    if (!data) return;
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'roadmap-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const executeImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = event.target?.result as string;
+          JSON.parse(json); // Валидация, что это именно JSON
+          localStorage.setItem('adhd-task-storage', json);
+          window.location.reload();
+        } catch (err) {
+          alert('Ошибка чтения файла. Убедитесь, что это корректный файл бэкапа.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  return (
+    <main className="min-h-screen p-8 md:p-12 max-w-5xl mx-auto flex flex-col items-center">
+      <header className="w-full mb-12 flex justify-between items-center">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-50">
+            Дашборд фокусировки
+          </h1>
+          <p className="text-zinc-400 mt-2 text-lg">
+            Ваш следующий шаг в каждом из направлений.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setView('history')}
+            className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
+            title="История"
+          >
+            <Archive className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+          
+          <div className="w-px h-8 bg-zinc-800 mx-1 hidden md:block"></div> {/* Разделитель */}
+          
+          <button 
+            onClick={() => setIsImportModalOpen(true)}
+            className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
+            title="Импорт данных"
+          >
+            <Upload className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+          <button 
+            onClick={handleExport}
+            className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
+            title="Скачать бэкап"
+          >
+            <Download className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+        </div>
+      </header>
+
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        {roadmaps.map((roadmap) => {
+          // Ищем активную задачу именно для этого роадмапа
+          const activeTask = activeSteps.find((t) => t.roadmapId === roadmap.id);
+          const progress = getRoadmapProgress(roadmap.id);
+
+          return (
+            <div
+              key={roadmap.id}
+              className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col justify-between hover:border-zinc-700 hover:shadow-lg transition-all relative group"
+            >
+              {/* Иконки управления (появляются/становятся ярче при наведении) */}
+              <div className="absolute top-6 right-6 flex gap-2 opacity-30 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={() => setEditingRoadmapId(roadmap.id)}
+                  className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200"
+                  title="Редактировать план"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setRoadmapToDelete(roadmap.id)}
+                  className="p-2 hover:bg-red-900/40 rounded-full text-zinc-400 hover:text-red-400 transition-colors"
+                  title="Удалить"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="mb-12">
+                <div className="flex justify-between items-center mb-4 pr-16 bg-transparent">
+                  <span className="text-xs uppercase tracking-widest text-zinc-500 font-semibold block truncate">
+                    {roadmap.title}
+                  </span>
+                  <span className="text-xs font-bold text-zinc-600 shrink-0">
+                    {progress.completed} / {progress.total}
+                  </span>
+                </div>
+                
+                {/* Тонкий прогресс-бар */}
+                <div className="w-full bg-zinc-800/80 h-1.5 rounded-full mb-6 overflow-hidden">
+                  <div 
+                    className="h-full bg-zinc-400 transition-all duration-700 ease-in-out" 
+                    style={{ width: `${progress.percentage}%` }}
+                  />
+                </div>
+
+                {activeTask ? (
+                  <h2 className="text-2xl font-bold text-zinc-100 leading-snug">
+                    {activeTask.title}
+                  </h2>
+                ) : (
+                  <h2 className="text-xl font-medium text-zinc-500 italic leading-snug">
+                    Нет активных задач
+                  </h2>
+                )}
+              </div>
+
+              <button 
+                onClick={() => {
+                   if (activeTask) {
+                     setFocus(activeTask.id);
+                   } else {
+                     setEditingRoadmapId(roadmap.id);
+                   }
+                }}
+                className={cn(
+                  "group mt-auto w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all",
+                  activeTask 
+                    ? "bg-zinc-100 text-zinc-950 hover:bg-white active:scale-[0.98]"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                )}>
+                {activeTask ? (
+                  <>
+                    <Play className="w-7 h-7 fill-current mr-1.5" />
+                    <span>Сфокусироваться</span>
+                  </>
+                ) : (
+                  <>
+                    <List className="w-5 h-5" />
+                    <span>Добавить задачи</span>
+                  </>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Неброский блок добавления роадмапа */}
+      <form 
+        onSubmit={handleAddRoadmap} 
+        className="mt-auto w-full max-w-md flex items-center gap-3 px-4 py-3 bg-zinc-900/50 border border-zinc-800/60 rounded-2xl"
+      >
+        <input 
+          type="text" 
+          placeholder="Новое направление..." 
+          value={newRoadmapTitle}
+          onChange={(e) => setNewRoadmapTitle(e.target.value)}
+          className="flex-1 bg-transparent border-none outline-none text-zinc-300 placeholder:text-zinc-600 px-2"
+        />
+        <button 
+          type="submit"
+          disabled={!newRoadmapTitle.trim()}
+          className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Plus className="w-4 h-4" />
+          Добавить
+        </button>
+      </form>
+
+      <ConfirmModal
+        isOpen={!!roadmapToDelete}
+        title="Удаление направления"
+        message="Вы уверены, что хотите удалить этот роадмап и все его задачи? Это действие необратимо."
+        onCancel={() => setRoadmapToDelete(null)}
+        onConfirm={() => {
+          if (roadmapToDelete) {
+            deleteRoadmap(roadmapToDelete);
+            setRoadmapToDelete(null);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={isImportModalOpen}
+        title="Импорт данных"
+        message="Текущие задачи и направления будут полностью перезаписаны данными из файла. Это необратимое действие. Продолжить?"
+        onCancel={() => setIsImportModalOpen(false)}
+        onConfirm={() => {
+          setIsImportModalOpen(false);
+          executeImport();
+        }}
+      />
+    </main>
   );
 }
