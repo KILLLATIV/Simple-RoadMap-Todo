@@ -1,9 +1,9 @@
 'use client';
 
 import { useTaskStore } from '@/store/useTaskStore';
-import { ArrowLeft, CheckCircle2, Eye, EyeOff, Trash2, Folder, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, Trash2, Folder, Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FocusViewProps {
@@ -20,11 +20,28 @@ export default function FocusView({ taskId }: FocusViewProps) {
   const addTask = useTaskStore((state) => state.addTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const getSubtaskCount = useTaskStore((state) => state.getSubtaskCount);
+  const hideCompleted = useTaskStore((state) => state.hideCompleted);
+  const setHideCompleted = useTaskStore((state) => state.setHideCompleted);
+  const updateTaskTitle = useTaskStore((state) => state.updateTaskTitle);
 
-  const [showCompleted, setShowCompleted] = useState(true);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState('');
 
   const { task, subtasks } = getTaskDetails(taskId);
+
+  useEffect(() => {
+    if (task) setTitleValue(task.title);
+  }, [task?.title]);
+
+  const handleSaveTitle = () => {
+    setIsEditingTitle(false);
+    if (task && titleValue.trim() && titleValue.trim() !== task.title) {
+       updateTaskTitle(task.id, titleValue.trim());
+    } else if (task) {
+       setTitleValue(task.title);
+    }
+  };
 
   if (!task) {
     return (
@@ -54,7 +71,7 @@ export default function FocusView({ taskId }: FocusViewProps) {
 
   const firstUnfinishedIndex = subtasks.findIndex((st) => st.status !== 'done');
 
-  const renderedSubtasks = showCompleted 
+  const renderedSubtasks = !hideCompleted 
     ? subtasks 
     : subtasks.filter((st) => st.status !== 'done');
 
@@ -71,12 +88,31 @@ export default function FocusView({ taskId }: FocusViewProps) {
 
       <div className="flex-1 flex flex-col items-center max-w-2xl w-full mx-auto space-y-6 mt-12 md:mt-16">
         
-        <motion.h1 
-          layout="position"
-          className="text-2xl sm:text-3xl font-black text-zinc-50 tracking-tight leading-tight text-center px-4"
-        >
-          {task.title}
-        </motion.h1>
+        <motion.div layout="position" className="flex justify-center w-full px-4 group/header">
+          {isEditingTitle ? (
+            <input
+              autoFocus
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
+              className="text-2xl sm:text-3xl font-black text-zinc-50 tracking-tight leading-tight text-center bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 w-full max-w-lg outline-none focus:border-zinc-500"
+            />
+          ) : (
+            <div className="flex items-center gap-3 max-w-full">
+              <h1 className="text-2xl sm:text-3xl font-black text-zinc-50 tracking-tight leading-tight text-center truncate">
+                {task.title}
+              </h1>
+              <button
+                onClick={() => { setIsEditingTitle(true); setTitleValue(task.title); }}
+                className="p-2 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-300 rounded-xl transition-all opacity-0 group-hover/header:opacity-100 flex-shrink-0"
+                title="Изменить название"
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </motion.div>
 
         <motion.div layout className="w-full mx-auto flex flex-col gap-4">
           
@@ -84,10 +120,10 @@ export default function FocusView({ taskId }: FocusViewProps) {
           {subtasks.length > 0 && (
             <motion.div layout className="flex justify-end mb-2">
               <button
-                onClick={() => setShowCompleted(!showCompleted)}
+                onClick={() => setHideCompleted(!hideCompleted)}
                 className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors group"
               >
-                {showCompleted ? (
+                {!hideCompleted ? (
                    <>
                      <EyeOff className="w-4 h-4 group-hover:text-zinc-300" />
                      <span>Скрыть выполненные</span>

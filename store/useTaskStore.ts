@@ -23,6 +23,7 @@ export interface Task {
 interface TaskStore {
   roadmaps: Roadmap[];
   tasks: Task[];
+  hideCompleted: boolean;
   
   // Навигация
   focusedTaskId: string | null;
@@ -37,6 +38,9 @@ interface TaskStore {
   addTask: (roadmapId: string, title: string, parentId?: string | null) => void;
   deleteTask: (taskId: string) => void;
   reorderTasks: (activeId: string, overId: string) => void;
+  updateRoadmapTitle: (id: string, title: string) => void;
+  updateTaskTitle: (id: string, title: string) => void;
+  setHideCompleted: (value: boolean) => void;
   
   // Селекторы
   getActiveStepPerRoadmap: () => Task[];
@@ -51,6 +55,7 @@ export const useTaskStore = create<TaskStore>()(
     (set, get) => ({
       roadmaps: [],
       tasks: [],
+      hideCompleted: false,
 
       focusedTaskId: null,
       setFocus: (taskId) => set({ focusedTaskId: taskId }),
@@ -96,6 +101,16 @@ export const useTaskStore = create<TaskStore>()(
           focusedTaskId: idsToDelete.has(state.focusedTaskId || '') ? null : state.focusedTaskId
         };
       }),
+
+      setHideCompleted: (value) => set({ hideCompleted: value }),
+
+      updateRoadmapTitle: (id, title) => set((state) => ({
+        roadmaps: state.roadmaps.map(r => r.id === id ? { ...r, title } : r)
+      })),
+
+      updateTaskTitle: (id, title) => set((state) => ({
+        tasks: state.tasks.map(t => t.id === id ? { ...t, title } : t)
+      })),
 
       reorderTasks: (activeId, overId) => set((state) => {
         const oldIndex = state.tasks.findIndex((t) => t.id === activeId);

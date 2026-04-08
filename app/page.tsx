@@ -215,19 +215,19 @@ export default function Home() {
       {/* Неброский блок добавления роадмапа */}
       <form
         onSubmit={handleAddRoadmap}
-        className="mt-auto mb-8 sm:mb-0 w-full max-w-md flex items-center gap-3 px-4 py-3 bg-zinc-900/50 border border-zinc-800/60 rounded-2xl"
+        className="mt-auto mb-8 sm:mb-0 w-full max-w-md flex flex-col sm:flex-row sm:items-center gap-3 p-4 sm:px-4 sm:py-3 bg-zinc-900/50 border border-zinc-800/60 rounded-2xl"
       >
         <input
           type="text"
           placeholder="Новое направление..."
           value={newRoadmapTitle}
           onChange={(e) => setNewRoadmapTitle(e.target.value)}
-          className="flex-1 bg-transparent border-none outline-none text-zinc-300 placeholder:text-zinc-600 px-2"
+          className="w-full sm:w-auto flex-1 bg-transparent border-none outline-none text-zinc-300 placeholder:text-zinc-600 px-2 py-2 sm:py-0 text-center sm:text-left rounded-lg bg-zinc-800/30 sm:bg-transparent"
         />
         <button
           type="submit"
           disabled={!newRoadmapTitle.trim()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+          className="w-full sm:w-auto justify-center flex items-center gap-1.5 px-4 py-3 sm:py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
         >
           <Plus className="w-4 h-4" />
           Добавить
