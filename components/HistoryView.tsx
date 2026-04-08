@@ -25,8 +25,6 @@ interface HistoryViewProps {
 }
 
 export default function HistoryView({ onBack }: HistoryViewProps) {
-  // Подписываемся на tasks, чтобы история обновлялась, если статус меняется в памяти
-  const tasks = useTaskStore((state) => state.tasks);
   const roadmaps = useTaskStore((state) => state.roadmaps);
   const getCompletionHistory = useTaskStore((state) => state.getCompletionHistory);
 
