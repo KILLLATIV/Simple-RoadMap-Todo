@@ -16,7 +16,7 @@ export default function Home() {
   const [roadmapToDelete, setRoadmapToDelete] = useState<string | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [newRoadmapTitle, setNewRoadmapTitle] = useState('');
-  
+
   const roadmaps = useTaskStore((state) => state.roadmaps);
   const activeSteps = useTaskStore(useShallow((state) => state.getActiveStepPerRoadmap()));
   const focusedTaskId = useTaskStore((state) => state.focusedTaskId);
@@ -58,7 +58,7 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
-  const executeImport = () => {
+  const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -66,7 +66,7 @@ export default function Home() {
       const target = e.target as HTMLInputElement;
       const file = target.files?.[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
@@ -84,39 +84,39 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8 md:p-12 max-w-5xl mx-auto flex flex-col items-center">
-      <header className="w-full mb-12 flex justify-between items-center">
+    <main className="min-h-screen p-4 sm:p-8 md:p-12 max-w-5xl mx-auto flex flex-col items-center">
+      <header className="w-full mb-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-50">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-50">
             Дашборд фокусировки
           </h1>
-          <p className="text-zinc-400 mt-2 text-lg">
+          <p className="text-zinc-400 mt-2 text-sm sm:text-base">
             Ваш следующий шаг в каждом из направлений.
           </p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button 
+
+        <div className="flex items-center gap-3 self-end sm:self-auto">
+          <button
             onClick={() => setView('history')}
             className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
             title="История"
           >
             <Archive className="w-5 h-5 md:w-6 md:h-6" />
           </button>
-          
+
           <div className="w-px h-8 bg-zinc-800 mx-1 hidden md:block"></div> {/* Разделитель */}
-          
-          <button 
-            onClick={() => setIsImportModalOpen(true)}
+
+          <button
+            onClick={handleExport}
             className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
-            title="Импорт данных"
+            title="Экспорт данных"
           >
             <Upload className="w-5 h-5 md:w-6 md:h-6" />
           </button>
-          <button 
-            onClick={handleExport}
+          <button
+            onClick={() => setIsImportModalOpen(true)}
             className="p-3 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors shadow-sm"
-            title="Скачать бэкап"
+            title="Импорт данных"
           >
             <Download className="w-5 h-5 md:w-6 md:h-6" />
           </button>
@@ -136,14 +136,14 @@ export default function Home() {
             >
               {/* Иконки управления (появляются/становятся ярче при наведении) */}
               <div className="absolute top-6 right-6 flex gap-2 opacity-30 group-hover:opacity-100 transition-opacity">
-                <button 
+                <button
                   onClick={() => setEditingRoadmapId(roadmap.id)}
                   className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200"
                   title="Редактировать план"
                 >
                   <List className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => setRoadmapToDelete(roadmap.id)}
                   className="p-2 hover:bg-red-900/40 rounded-full text-zinc-400 hover:text-red-400 transition-colors"
                   title="Удалить"
@@ -161,11 +161,11 @@ export default function Home() {
                     {progress.completed} / {progress.total}
                   </span>
                 </div>
-                
+
                 {/* Тонкий прогресс-бар */}
                 <div className="w-full bg-zinc-800/80 h-1.5 rounded-full mb-6 overflow-hidden">
-                  <div 
-                    className="h-full bg-zinc-400 transition-all duration-700 ease-in-out" 
+                  <div
+                    className="h-full bg-zinc-400 transition-all duration-700 ease-in-out"
                     style={{ width: `${progress.percentage}%` }}
                   />
                 </div>
@@ -181,28 +181,28 @@ export default function Home() {
                 )}
               </div>
 
-              <button 
+              <button
                 onClick={() => {
-                   if (activeTask) {
-                     setFocus(activeTask.id);
-                   } else {
-                     setEditingRoadmapId(roadmap.id);
-                   }
+                  if (activeTask) {
+                    setFocus(activeTask.id);
+                  } else {
+                    setEditingRoadmapId(roadmap.id);
+                  }
                 }}
                 className={cn(
-                  "group mt-auto w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold text-lg transition-all",
-                  activeTask 
+                  "group mt-auto flex items-center justify-center gap-2 w-full px-6 py-4 rounded-2xl font-bold text-lg transition-all",
+                  activeTask
                     ? "bg-zinc-100 text-zinc-950 hover:bg-white active:scale-[0.98]"
                     : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
                 )}>
                 {activeTask ? (
                   <>
-                    <Play className="w-7 h-7 fill-current mr-1.5" />
+                    <Play className="w-5 h-5 flex-shrink-0 fill-current" />
                     <span>Сфокусироваться</span>
                   </>
                 ) : (
                   <>
-                    <List className="w-5 h-5" />
+                    <List className="w-5 h-5 flex-shrink-0" />
                     <span>Добавить задачи</span>
                   </>
                 )}
@@ -213,18 +213,18 @@ export default function Home() {
       </div>
 
       {/* Неброский блок добавления роадмапа */}
-      <form 
-        onSubmit={handleAddRoadmap} 
-        className="mt-auto w-full max-w-md flex items-center gap-3 px-4 py-3 bg-zinc-900/50 border border-zinc-800/60 rounded-2xl"
+      <form
+        onSubmit={handleAddRoadmap}
+        className="mt-auto mb-8 sm:mb-0 w-full max-w-md flex items-center gap-3 px-4 py-3 bg-zinc-900/50 border border-zinc-800/60 rounded-2xl"
       >
-        <input 
-          type="text" 
-          placeholder="Новое направление..." 
+        <input
+          type="text"
+          placeholder="Новое направление..."
           value={newRoadmapTitle}
           onChange={(e) => setNewRoadmapTitle(e.target.value)}
           className="flex-1 bg-transparent border-none outline-none text-zinc-300 placeholder:text-zinc-600 px-2"
         />
-        <button 
+        <button
           type="submit"
           disabled={!newRoadmapTitle.trim()}
           className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
@@ -254,7 +254,7 @@ export default function Home() {
         onCancel={() => setIsImportModalOpen(false)}
         onConfirm={() => {
           setIsImportModalOpen(false);
-          executeImport();
+          handleImport();
         }}
       />
     </main>

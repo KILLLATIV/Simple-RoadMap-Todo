@@ -59,7 +59,7 @@ export default function FocusView({ taskId }: FocusViewProps) {
     : subtasks.filter((st) => st.status !== 'done');
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col relative py-12 px-4 md:px-8 overflow-x-hidden">
+    <div className="min-h-screen bg-zinc-950 flex flex-col relative py-12 px-4 sm:px-8 overflow-x-hidden">
       {/* Кнопка возврата */}
       <button 
         onClick={handleBack}
@@ -73,7 +73,7 @@ export default function FocusView({ taskId }: FocusViewProps) {
         
         <motion.h1 
           layout="position"
-          className="text-3xl font-black text-zinc-50 tracking-tight leading-tight text-center px-4"
+          className="text-2xl sm:text-3xl font-black text-zinc-50 tracking-tight leading-tight text-center px-4"
         >
           {task.title}
         </motion.h1>

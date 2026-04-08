@@ -52,17 +52,17 @@ function SortableTaskItem({ task, getSubtaskCount, onDeleteClick }: SortableTask
   const isDone = task.status === 'done';
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
+    <div
+      ref={setNodeRef}
+      style={style}
       className="group bg-zinc-900 border border-zinc-800 rounded-2xl hover:border-zinc-700 transition-colors shadow-sm overflow-hidden"
     >
       <div className="flex items-center justify-between p-5">
         <div className="flex items-center gap-4">
           {/* Иконка перетаскивания (Drag Handle) */}
-          <div 
-            {...attributes} 
-            {...listeners} 
+          <div
+            {...attributes}
+            {...listeners}
             className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 p-1 rounded-md transition-colors touch-none outline-none"
           >
             <GripVertical className="w-5 h-5" />
@@ -70,32 +70,32 @@ function SortableTaskItem({ task, getSubtaskCount, onDeleteClick }: SortableTask
 
           <div className="flex items-center gap-2">
             {count.total > 0 ? (
-              <button 
+              <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
                 title={isExpanded ? 'Свернуть' : 'Развернуть'}
               >
-                {isExpanded ? <ChevronDown className="w-5 h-5"/> : <ChevronRight className="w-5 h-5"/>}
+                {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
               </button>
             ) : (
-               <div className="w-7 h-7" /> // Пустой блок для выравнивания, если нет подзадач
+              <div className="w-7 h-7" /> // Пустой блок для выравнивания, если нет подзадач
             )}
 
             <span className={`text-lg font-medium transition-colors ${isDone ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
               {task.title}
             </span>
           </div>
-          
+
           {/* Бейджик с подзадачами */}
           {count.total > 0 && (
             <span className="flex items-center gap-1.5 text-xs font-semibold bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-lg border border-zinc-700/50">
               <GitMerge className="w-3.5 h-3.5" />
-              Subtasks: {count.completed} / {count.total}
+              Tasks: {count.completed} / {count.total}
             </span>
           )}
         </div>
-        
-        <button 
+
+        <button
           onClick={() => onDeleteClick({ id: task.id, title: task.title })}
           className="p-2 text-zinc-600 hover:bg-red-900/30 hover:text-red-400 rounded-xl transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
           title="Удалить задачу"
@@ -114,8 +114,8 @@ function SortableTaskItem({ task, getSubtaskCount, onDeleteClick }: SortableTask
                 <span className={`text-base font-medium transition-colors ${stIsDone ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}>
                   {st.title}
                 </span>
-                
-                <button 
+
+                <button
                   onClick={() => onDeleteClick({ id: st.id, title: st.title })}
                   className="p-1.5 text-zinc-500 hover:bg-red-900/40 hover:text-red-400 rounded-lg transition-all opacity-0 group-hover/subtask:opacity-100"
                   title="Удалить подзадачу"
@@ -143,7 +143,7 @@ export default function RoadmapEditor({ roadmapId, onClose }: RoadmapEditorProps
   const addTask = useTaskStore((state) => state.addTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const reorderTasks = useTaskStore((state) => state.reorderTasks);
-  
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [taskToDelete, setTaskToDelete] = useState<{ id: string; title: string } | null>(null);
 
@@ -185,8 +185,8 @@ export default function RoadmapEditor({ roadmapId, onClose }: RoadmapEditorProps
 
   return (
     <>
-      <main className="min-h-screen max-w-4xl mx-auto p-8 md:p-12 text-zinc-50 flex flex-col">
-        <button 
+      <main className="min-h-screen max-w-4xl mx-auto py-8 px-4 sm:px-8 md:py-12 text-zinc-50 flex flex-col">
+        <button
           onClick={onClose}
           className="mb-10 flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors w-fit"
         >
@@ -196,7 +196,7 @@ export default function RoadmapEditor({ roadmapId, onClose }: RoadmapEditorProps
 
         <header className="mb-12 border-b border-zinc-800 pb-6">
           <h1 className="text-3xl font-extrabold tracking-tight">{roadmap.title}</h1>
-          <p className="text-zinc-400 mt-2 text-lg">Редактор структуры проекта</p>
+          <p className="text-zinc-400 mt-2 text-lg">Редактор проектов</p>
         </header>
 
         <div className="flex-1 flex flex-col space-y-3">
@@ -205,17 +205,17 @@ export default function RoadmapEditor({ roadmapId, onClose }: RoadmapEditorProps
               Вы пока не добавили ни одной задачи.
             </div>
           ) : (
-            <DndContext 
+            <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext 
+              <SortableContext
                 items={rootTasks.map(t => t.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {rootTasks.map((task) => (
-                  <SortableTaskItem 
+                  <SortableTaskItem
                     key={task.id}
                     task={task}
                     getSubtaskCount={getSubtaskCount}
@@ -227,18 +227,18 @@ export default function RoadmapEditor({ roadmapId, onClose }: RoadmapEditorProps
           )}
         </div>
 
-        <form onSubmit={handleAddTask} className="mt-8 flex gap-3 pt-6">
-          <input 
+        <form onSubmit={handleAddTask} className="mt-8 mb-8 sm:mb-0 flex flex-col sm:flex-row gap-3 w-full pt-6">
+          <input
             type="text"
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="Новая задача верхнего уровня..."
-            className="flex-1 bg-zinc-900/80 border border-zinc-800 rounded-2xl px-5 py-4 text-zinc-100 focus:outline-none focus:border-zinc-600 transition-colors placeholder:text-zinc-600 text-lg shadow-inner"
+            className="w-full sm:w-auto flex-1 bg-zinc-900/80 border border-zinc-800 rounded-2xl px-5 py-4 text-zinc-100 focus:outline-none focus:border-zinc-600 transition-colors placeholder:text-zinc-600 text-lg shadow-inner"
           />
-          <button 
+          <button
             type="submit"
             disabled={!newTaskTitle.trim()}
-            className="bg-zinc-100 text-zinc-950 hover:bg-white px-8 font-bold text-lg flex items-center gap-2 rounded-2xl transition-all disabled:opacity-50 disabled:scale-100 active:scale-95 shadow-sm"
+            className="w-full sm:w-auto justify-center py-4 bg-zinc-100 text-zinc-950 hover:bg-white px-8 font-bold text-lg flex items-center gap-2 rounded-2xl transition-all disabled:opacity-50 disabled:scale-100 active:scale-95 shadow-sm"
           >
             <Plus className="w-5 h-5 stroke-[3]" />
             Добавить
