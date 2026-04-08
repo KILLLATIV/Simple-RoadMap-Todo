@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Archive, ListTodo, Trash2, List, Plus, Download, Upload } from 'lucide-react';
+import { Play, Archive, Trash2, List, Plus, Download, Upload } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
 import { useShallow } from 'zustand/react/shallow';
 import FocusView from '@/components/FocusView';
@@ -62,8 +62,9 @@ export default function Home() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (!file) return;
       
       const reader = new FileReader();
@@ -73,7 +74,7 @@ export default function Home() {
           JSON.parse(json); // Валидация, что это именно JSON
           localStorage.setItem('adhd-task-storage', json);
           window.location.reload();
-        } catch (err) {
+        } catch {
           alert('Ошибка чтения файла. Убедитесь, что это корректный файл бэкапа.');
         }
       };

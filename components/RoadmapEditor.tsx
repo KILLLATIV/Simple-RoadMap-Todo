@@ -1,6 +1,6 @@
 'use client';
 
-import { useTaskStore } from '@/store/useTaskStore';
+import { useTaskStore, Task } from '@/store/useTaskStore';
 import { ArrowLeft, Trash2, Plus, GitMerge, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -22,7 +22,7 @@ import { CSS } from '@dnd-kit/utilities';
 import ConfirmModal from './ConfirmModal';
 
 interface SortableTaskItemProps {
-  task: any;
+  task: Task;
   getSubtaskCount: (taskId: string) => { total: number; completed: number };
   onDeleteClick: (taskToDelete: { id: string; title: string }) => void;
 }

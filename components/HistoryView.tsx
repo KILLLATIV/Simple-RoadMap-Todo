@@ -31,7 +31,7 @@ export default function HistoryView({ onBack }: HistoryViewProps) {
   const getCompletionHistory = useTaskStore((state) => state.getCompletionHistory);
 
   // Получаем и кэшируем историю
-  const history = useMemo(() => getCompletionHistory(), [tasks, getCompletionHistory]);
+  const history = useMemo(() => getCompletionHistory(), [getCompletionHistory]);
 
   // Группируем задачи по датам
   const groupedTasks = useMemo(() => {
