@@ -38,6 +38,7 @@ interface TaskStore {
   addTask: (roadmapId: string, title: string, parentId?: string | null) => void;
   deleteTask: (taskId: string) => void;
   reorderTasks: (activeId: string, overId: string) => void;
+  reorderSubtasks: (activeId: string, overId: string, parentId: string) => void;
   updateRoadmapTitle: (id: string, title: string) => void;
   updateTaskTitle: (id: string, title: string) => void;
   setHideCompleted: (value: boolean) => void;
@@ -119,6 +120,31 @@ export const useTaskStore = create<TaskStore>()(
         if (oldIndex !== -1 && newIndex !== -1) {
           return {
             tasks: arrayMove(state.tasks, oldIndex, newIndex),
+          };
+        }
+        return state;
+      }),
+
+      reorderSubtasks: (activeId, overId, parentId) => set((state) => {
+        const subtasks = state.tasks
+          .filter(t => t.parentId === parentId)
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        const oldIndex = subtasks.findIndex((t) => t.id === activeId);
+        const newIndex = subtasks.findIndex((t) => t.id === overId);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newSubtasks = arrayMove(subtasks, oldIndex, newIndex);
+          
+          const updatedSubtasks = newSubtasks.map((task, index) => ({
+            ...task,
+            order: index * 1000
+          }));
+          
+          const subtaskIdMap = new Map(updatedSubtasks.map(t => [t.id, t]));
+          
+          return {
+            tasks: state.tasks.map(t => subtaskIdMap.has(t.id) ? subtaskIdMap.get(t.id)! : t)
           };
         }
         return state;
@@ -216,13 +242,22 @@ export const useTaskStore = create<TaskStore>()(
         const { roadmaps, tasks } = get();
         const activeSteps: Task[] = [];
 
+        const findDeepestNextStep = (allTasks: Task[], parentId: string | null, roadmapId: string): Task | null => {
+          const children = allTasks
+            .filter(t => t.roadmapId === roadmapId && t.parentId === parentId)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+          for (const child of children) {
+            if (child.status !== 'done') {
+              const deeper = findDeepestNextStep(allTasks, child.id, roadmapId);
+              return deeper || child;
+            }
+          }
+          return null;
+        };
+
         roadmaps.forEach((roadmap) => {
-          const activeTask = tasks.find(
-            (task) =>
-              task.roadmapId === roadmap.id &&
-              task.parentId === null &&
-              (task.status === 'todo' || task.status === 'in_progress')
-          );
+          const activeTask = findDeepestNextStep(tasks, null, roadmap.id);
           if (activeTask) activeSteps.push(activeTask);
         });
 

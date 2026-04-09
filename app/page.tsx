@@ -18,6 +18,7 @@ export default function Home() {
   const [newRoadmapTitle, setNewRoadmapTitle] = useState('');
 
   const roadmaps = useTaskStore((state) => state.roadmaps);
+  const tasks = useTaskStore((state) => state.tasks);
   const activeSteps = useTaskStore(useShallow((state) => state.getActiveStepPerRoadmap()));
   const focusedTaskId = useTaskStore((state) => state.focusedTaskId);
   const setFocus = useTaskStore((state) => state.setFocus);
@@ -127,6 +128,7 @@ export default function Home() {
         {roadmaps.map((roadmap) => {
           // Ищем активную задачу именно для этого роадмапа
           const activeTask = activeSteps.find((t) => t.roadmapId === roadmap.id);
+          const parentTask = activeTask?.parentId ? tasks.find(t => t.id === activeTask.parentId) : null;
           const progress = getRoadmapProgress(roadmap.id);
 
           return (
@@ -137,13 +139,6 @@ export default function Home() {
               {/* Иконки управления (появляются/становятся ярче при наведении) */}
               <div className="absolute top-6 right-6 flex gap-2 opacity-30 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => setEditingRoadmapId(roadmap.id)}
-                  className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-200"
-                  title="Редактировать план"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
                   onClick={() => setRoadmapToDelete(roadmap.id)}
                   className="p-2 hover:bg-red-900/40 rounded-full text-zinc-400 hover:text-red-400 transition-colors"
                   title="Удалить"
@@ -152,11 +147,30 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="mb-12">
-                <div className="flex justify-between items-center mb-4 pr-16 bg-transparent">
-                  <span className="text-xs uppercase tracking-widest text-zinc-500 font-semibold block truncate">
-                    {roadmap.title}
-                  </span>
+              <div className="flex-1 flex flex-col mb-12">
+                <div className="flex justify-between items-center mb-4 bg-transparent gap-4 pr-6">
+                  <div className="flex items-center gap-2 text-sm text-zinc-500 uppercase tracking-wider font-semibold truncate">
+                    <button 
+                      onClick={() => setEditingRoadmapId(roadmap.id)}
+                      className="hover:underline cursor-pointer hover:text-zinc-300 transition-colors truncate shrink-0 max-w-[120px] text-left"
+                      title="Редактировать направление"
+                    >
+                      {roadmap?.title || 'Без проекта'}
+                    </button>
+                    
+                    {parentTask && (
+                      <>
+                        <span className="text-zinc-700 shrink-0">/</span>
+                        <button 
+                          onClick={() => setFocus(parentTask.id)}
+                          className="hover:underline cursor-pointer hover:text-zinc-300 transition-colors truncate shrink max-w-[150px] text-left"
+                          title="Открыть задачи проекта"
+                        >
+                          {parentTask.title}
+                        </button>
+                      </>
+                    )}
+                  </div>
                   <span className="text-xs font-bold text-zinc-600 shrink-0">
                     {progress.completed} / {progress.total}
                   </span>
@@ -170,15 +184,20 @@ export default function Home() {
                   />
                 </div>
 
-                {activeTask ? (
-                  <h2 className="text-2xl font-bold text-zinc-100 leading-snug">
-                    {activeTask.title}
-                  </h2>
-                ) : (
-                  <h2 className="text-xl font-medium text-zinc-500 italic leading-snug">
-                    Нет активных задач
-                  </h2>
-                )}
+                <div className="mt-auto">
+                  {activeTask ? (
+                    <button 
+                      onClick={() => setFocus(activeTask.id)}
+                      className="text-xl font-semibold text-white mb-4 leading-snug text-left hover:underline cursor-pointer transition-colors w-full"
+                    >
+                      {activeTask.title}
+                    </button>
+                  ) : (
+                    <h2 className="text-xl font-medium text-zinc-500 italic mb-4 leading-snug">
+                      Нет активных задач
+                    </h2>
+                  )}
+                </div>
               </div>
 
               <button
