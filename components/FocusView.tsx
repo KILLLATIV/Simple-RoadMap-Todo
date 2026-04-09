@@ -21,7 +21,6 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import ConfirmModal from './ConfirmModal'; // Ensure we can use ConfirmModal for deletion if we want, but currently FocusView uses window.confirm. I'll stick to window.confirm to not break anything unless needed. Wait, we imported ConfirmModal in RoadmapEditor, in FocusView it was window.confirm.
 
 interface SortableSubtaskItemProps {
   st: Task;
@@ -189,7 +188,7 @@ export default function FocusView({ taskId }: FocusViewProps) {
 
   useEffect(() => {
     if (task) setTitleValue(task.title);
-  }, [task?.title]);
+  }, [task, task?.title]);
 
   const handleSaveTitle = () => {
     setIsEditingTitle(false);
